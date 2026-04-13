@@ -4,8 +4,8 @@ import pool from "../config/db.js";
 export const insertData = async (data) => {
   const query = `
     INSERT INTO cold_storage_data 
-    (device_id, temperature, humidity, voltage, current)
-    VALUES ($1, $2, $3, $4, $5)
+    (device_id, temperature, humidity, voltage, current, insight, recommendation, spoilage_risk)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
     RETURNING *;
   `;
 
@@ -15,6 +15,9 @@ export const insertData = async (data) => {
     data.humidity,
     data.voltage,
     data.current,
+    data.insight,
+    data.recommendation,
+    data.spoilage_risk,
   ];
 
   const result = await pool.query(query, values);

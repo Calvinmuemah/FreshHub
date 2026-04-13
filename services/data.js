@@ -102,9 +102,9 @@ export const createData = async (payload) => {
       humidity,
       voltage,
       current,
-      insight: aiResult.insight,
-      recommendation: aiResult.recommendation,
-      spoilage_risk: spoilage.risk,
+      insight: aiResult?.insight || "No insight",
+      recommendation: aiResult?.recommendation || "No recommendation",
+      spoilage_risk: spoilage?.risk || "UNKNOWN",
     });
 
     return saved;
