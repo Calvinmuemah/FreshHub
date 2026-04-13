@@ -1,89 +1,49 @@
-// services/ai.service.js
+import { createGoogleGenerativeAI } from "@ai-sdk/google";
 
 const DEFAULT_AI_RESPONSE = {
   insight: "Unable to analyze data",
   recommendation: "Check system manually",
 };
 
-const extractJsonObject = (text) => {
-  if (!text || typeof text !== "string") {
-    return null;
+const rawGeminiKey =
+  process.env.GOOGLE_GENERATIVE_AI_API_KEY || process.env.GEMINI_API_KEY;
+const GOOGLE_GENERATIVE_AI_API_KEY =
+  typeof rawGeminiKey === "string" ? rawGeminiKey.trim() : "";
+
+if (!GOOGLE_GENERATIVE_AI_API_KEY) {
+  console.warn(
+    "GOOGLE_GENERATIVE_AI_API_KEY is not set or is empty. Gemini calls will likely fail."
+  );
+}
+
+const provider = createGoogleGenerativeAI({
+  apiKey: GOOGLE_GENERATIVE_AI_API_KEY || undefined,
+});
+
+const getModel = (modelId) => provider.generativeAI(modelId);
+
+const extractText = (result) => {
+  if (!result?.content || !Array.isArray(result.content)) {
+    return "";
   }
 
-  const fenced = text.match(/```json\s*([\s\S]*?)```/i);
-  if (fenced?.[1]) {
-    return fenced[1].trim();
-  }
-
-  const start = text.indexOf("{");
-  const end = text.lastIndexOf("}");
-  if (start >= 0 && end > start) {
-    return text.slice(start, end + 1).trim();
-  }
-
-  return null;
+  return result.content
+    .filter((part) => part?.text)
+    .map((part) => part.text)
+    .join(" ")
+    .trim();
 };
 
-export const getAIInsights = async (data) => {
-  const model = process.env.GEMINI_MODEL || "gemini-1.5-flash";
-
-  const prompt = `
-You are an IoT cold storage expert.
-
-Data:
-- Temperature: ${data.temperature}°C
-- Humidity: ${data.humidity}%
-- Voltage: ${data.voltage}V
-- Current: ${data.current}mA
-
-1. Give a short insight about system condition
-2. Give a clear recommendation for the farmer
-
-Respond in JSON:
-{
-  "insight": "...",
-  "recommendation": "..."
-}
-`;
-
-  if (!process.env.GEMINI_API_KEY) {
-    console.warn("GEMINI_API_KEY missing, skipping AI insights");
+const parseAiResponse = (text) => {
+  if (!text) {
     return DEFAULT_AI_RESPONSE;
   }
 
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${process.env.GEMINI_API_KEY}`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          responseMimeType: "application/json",
-          temperature: 0.2,
-        },
-      }),
-    }
-  );
-
-  const dataRes = await response.json();
-
-  if (!response.ok) {
-    const apiMessage =
-      dataRes?.error?.message || `Gemini request failed with status ${response.status}`;
-    console.error("Gemini API error:", apiMessage);
-    return DEFAULT_AI_RESPONSE;
-  }
-
-  const text = dataRes?.candidates?.[0]?.content?.parts?.[0]?.text;
-  const jsonString = extractJsonObject(text);
-
-  if (!jsonString) {
-    return DEFAULT_AI_RESPONSE;
-  }
+  const fencedJson = text.match(/```json\s*([\s\S]*?)```/i)?.[1];
+  const jsonText = fencedJson || text;
 
   try {
-    const parsed = JSON.parse(jsonString);
+    const parsed = JSON.parse(jsonText);
 
     return {
       insight: parsed?.insight || DEFAULT_AI_RESPONSE.insight,
@@ -91,6 +51,54 @@ Respond in JSON:
         parsed?.recommendation || DEFAULT_AI_RESPONSE.recommendation,
     };
   } catch {
+    return {
+      insight: text.slice(0, 200) || DEFAULT_AI_RESPONSE.insight,
+      recommendation: DEFAULT_AI_RESPONSE.recommendation,
+    };
+  }
+};
+
+export const getAIInsights = async (data) => {
+  try {
+    const prompt = `
+You are an IoT cold storage expert.
+Analyze the following sensor data and provide a short structured response.
+
+IMPORTANT: Return ONLY valid JSON in this exact shape:
+{
+  "insight": "...",
+  "recommendation": "..."
+}
+
+Rules:
+- Keep the insight short and practical.
+- Keep the recommendation short and actionable.
+- Do not include markdown, bullets, or extra commentary.
+
+Sensor data:
+${JSON.stringify(data)}
+`;
+
+    if (!GOOGLE_GENERATIVE_AI_API_KEY) {
+      return DEFAULT_AI_RESPONSE;
+    }
+
+    const model = getModel(process.env.GEMINI_MODEL || "gemini-2.5-flash");
+
+    const result = await model.doGenerate({
+      prompt: [
+        {
+          role: "user",
+          content: [{ type: "text", text: prompt }],
+        },
+      ],
+      temperature: 0.2,
+    });
+
+    const text = extractText(result);
+    return parseAiResponse(text);
+  } catch (err) {
+    console.error("Gemini service error:", err);
     return DEFAULT_AI_RESPONSE;
   }
 };
