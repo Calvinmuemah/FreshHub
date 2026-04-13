@@ -20,7 +20,7 @@ export const checkAlerts = async (data, user) => {
   if (message) {
     message += `Temp: ${data.temperature}°C`;
 
-    await sendSMS(user.phone, message);
+    await sendSMS(user.phone_number, message);
     await sendEmail(user.email, "BaridiBox Alert", message);
   }
 };

@@ -22,6 +22,8 @@ const provider = createGoogleGenerativeAI({
 
 const getModel = (modelId) => provider.generativeAI(modelId);
 
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
 const extractText = (result) => {
   if (!result?.content || !Array.isArray(result.content)) {
     return "";
@@ -83,20 +85,61 @@ ${JSON.stringify(data)}
       return DEFAULT_AI_RESPONSE;
     }
 
-    const model = getModel(process.env.GEMINI_MODEL || "gemini-2.5-flash");
+    const configuredModel = process.env.GEMINI_MODEL || "gemini-2.5-flash";
+    const fallbackModels = [
+      configuredModel,
+      "gemini-2.5-flash-lite",
+      "gemini-2.0-flash",
+    ];
 
-    const result = await model.doGenerate({
-      prompt: [
-        {
-          role: "user",
-          content: [{ type: "text", text: prompt }],
-        },
-      ],
-      temperature: 0.2,
-    });
+    let lastError = null;
 
-    const text = extractText(result);
-    return parseAiResponse(text);
+    for (const [index, modelId] of fallbackModels.entries()) {
+      try {
+        const model = getModel(modelId);
+
+        const result = await model.doGenerate({
+          prompt: [
+            {
+              role: "user",
+              content: [{ type: "text", text: prompt }],
+            },
+          ],
+          temperature: 0.2,
+        });
+
+        const text = extractText(result);
+        const parsed = parseAiResponse(text);
+
+        if (
+          parsed.insight !== DEFAULT_AI_RESPONSE.insight ||
+          parsed.recommendation !== DEFAULT_AI_RESPONSE.recommendation
+        ) {
+          return parsed;
+        }
+
+        // If the provider responded but the payload was empty/invalid, continue to fallback models.
+        lastError = new Error(`Empty or invalid Gemini response from ${modelId}`);
+      } catch (err) {
+        lastError = err;
+
+        const retryable = err?.statusCode === 503 || err?.isRetryable;
+        const isLastAttempt = index === fallbackModels.length - 1;
+
+        if (retryable && !isLastAttempt) {
+          await sleep(400 * (index + 1));
+          continue;
+        }
+
+        console.error(`Gemini model ${modelId} failed:`, err?.message || err);
+      }
+    }
+
+    if (lastError) {
+      console.warn("Gemini fallback to default response:", lastError?.message || lastError);
+    }
+
+    return DEFAULT_AI_RESPONSE;
   } catch (err) {
     console.error("Gemini service error:", err);
     return DEFAULT_AI_RESPONSE;
