@@ -18,7 +18,7 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(
   cors({
-    origin: "https://sms-saas-psi.vercel.app",
+    origin: "http://localhost:5173",
   })
 );
 
