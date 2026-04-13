@@ -25,7 +25,8 @@ export const createDevice = async (req, res) => {
       device,
     });
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    const statusCode = error.status || 500;
+    res.status(statusCode).json({ error: error.message || "Unexpected server error" });
   }
 };
 
@@ -40,6 +41,7 @@ export const getDevices = async (req, res) => {
     const devices = await DeviceService.fetchUserDevices(userId);
     res.json(devices);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+    const statusCode = error.status || 500;
+    res.status(statusCode).json({ error: error.message || "Unexpected server error" });
   }
 };

@@ -28,6 +28,15 @@ export const findUserByEmail = async (email) => {
   return result.rows[0];
 };
 
+// FIND USER BY ID
+export const findUserById = async (id) => {
+  const result = await pool.query(
+    "SELECT id, name, email, is_verified FROM system_users WHERE id=$1",
+    [id]
+  );
+  return result.rows[0];
+};
+
 // VERIFY USER
 export const verifyUser = async (email) => {
   await pool.query(
