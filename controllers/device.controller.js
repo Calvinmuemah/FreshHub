@@ -3,11 +3,11 @@ import * as DeviceService from "../services/device.service.js";
 
 export const createDevice = async (req, res) => {
   try {
-    const userId = req.body.userId || req.user?.id;
+    const userId = req.user?.id;
     const { name, location } = req.body;
 
     if (!userId) {
-      return res.status(400).json({ error: "userId is required" });
+      return res.status(401).json({ error: "Authentication required" });
     }
 
     if (!name) {
@@ -32,10 +32,10 @@ export const createDevice = async (req, res) => {
 
 export const getDevices = async (req, res) => {
   try {
-    const userId = req.query.userId || req.user?.id;
+    const userId = req.user?.id;
 
     if (!userId) {
-      return res.status(400).json({ error: "userId query param is required" });
+      return res.status(401).json({ error: "Authentication required" });
     }
 
     const devices = await DeviceService.fetchUserDevices(userId);

@@ -4,10 +4,10 @@ import {
   createDevice,
   getDevices,
 } from "../controllers/device.controller.js";
-// import { verifyToken } from "../middlewares/authMiddleware.js";
+import { verifyToken } from "../middlewares/authMiddleware.js";
 
 const router = express.Router();
-router.post("/", createDevice);
-router.get("/", getDevices);
+router.post("/", verifyToken, createDevice);
+router.get("/", verifyToken, getDevices);
 
 export default router;

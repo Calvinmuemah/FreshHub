@@ -8,6 +8,7 @@ import morgan from "morgan";
 import authRoutes from "./routes/authroutes.js";
 import dataRoutes from "./routes/dataRoutes.js";
 import deviceRoutes from "./routes/device.routes.js";
+import testRoutes from "./routes/testRoutes.js";
 
 const app = express();
 
@@ -26,6 +27,7 @@ app.use(
 app.use("/api/v1/auth", authRoutes);
 app.use("/api/v1/data", dataRoutes);
 app.use("/api/v1/devices", deviceRoutes);
+app.use("/api/v1/test", testRoutes); // Debug endpoints - remove in production
 
 
 // Health check
