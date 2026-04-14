@@ -116,13 +116,13 @@ export const createData = async (payload) => {
 
 export const fetchLatest = async (deviceId) => {
   if (!deviceId) throw new Error("deviceId required");
-
+  console.log("Service: fetchLatest called with deviceId:", deviceId);
   return await DataModel.getLatestData(deviceId);
 };
 
 export const fetchHistory = async (deviceId) => {
   if (!deviceId) throw new Error("deviceId required");
-
+  console.log("Service: fetchHistory called with deviceId:", deviceId);
   return await DataModel.getHistory(deviceId);
 };
 

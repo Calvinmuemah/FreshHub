@@ -33,6 +33,7 @@ export const getLatestData = async (deviceId) => {
   `;
 
   const result = await pool.query(query, [deviceId]);
+  console.log("Model: getLatestData query result:", result.rows);
   return result.rows[0];
 };
 
@@ -45,6 +46,7 @@ export const getHistory = async (deviceId) => {
   `;
 
   const result = await pool.query(query, [deviceId]);
+  console.log("Model: getHistory query result:", result.rows);
   return result.rows;
 };
 

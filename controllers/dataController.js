@@ -16,13 +16,21 @@ export const sendData = async (req, res) => {
 export const getLatestData = async (req, res) => {
   try {
     const { deviceId } = req.params;
+    
+    if (!deviceId) {
+      return res.status(400).json({ error: "deviceId is required" });
+    }
+
+    console.log("Fetching latest data for deviceId:", deviceId);
     const data = await DataService.fetchLatest(deviceId);
+    console.log("Latest data result:", data);
 
     res.status(200).json({
       success: true,
       data: data || null,
     });
   } catch (error) {
+    console.error("Error in getLatestData:", error);
     res.status(500).json({ error: error.message });
   }
 };
@@ -30,13 +38,21 @@ export const getLatestData = async (req, res) => {
 export const getHistory = async (req, res) => {
   try {
     const { deviceId } = req.params;
+    
+    if (!deviceId) {
+      return res.status(400).json({ error: "deviceId is required" });
+    }
+
+    console.log("Fetching history for deviceId:", deviceId);
     const data = await DataService.fetchHistory(deviceId);
+    console.log("History data result:", data);
 
     res.status(200).json({
       success: true,
-      data,
+      data: data || [],
     });
   } catch (error) {
+    console.error("Error in getHistory:", error);
     res.status(500).json({ error: error.message });
   }
 };
