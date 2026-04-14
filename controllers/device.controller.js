@@ -1,13 +1,14 @@
 // controllers/device.controller.js
 import * as DeviceService from "../services/device.service.js";
 
+// CREATE DEVICE (no auth)
 export const createDevice = async (req, res) => {
   try {
-    const userId = req.user?.id;
-    const { name, location } = req.body;
+    const { userId, name, location } = req.body;
 
+    // ✅ validate
     if (!userId) {
-      return res.status(401).json({ error: "Authentication required" });
+      return res.status(400).json({ error: "userId is required" });
     }
 
     if (!name) {
@@ -26,22 +27,31 @@ export const createDevice = async (req, res) => {
     });
   } catch (error) {
     const statusCode = error.status || 500;
-    res.status(statusCode).json({ error: error.message || "Unexpected server error" });
+    res.status(statusCode).json({
+      error: error.message || "Unexpected server error",
+    });
   }
 };
 
+// GET DEVICES (no auth)
 export const getDevices = async (req, res) => {
   try {
-    const userId = req.user?.id;
+    const { userId } = req.query;
 
     if (!userId) {
-      return res.status(401).json({ error: "Authentication required" });
+      return res.status(400).json({ error: "userId is required" });
     }
 
     const devices = await DeviceService.fetchUserDevices(userId);
-    res.json(devices);
+
+    res.json({
+      success: true,
+      devices,
+    });
   } catch (error) {
     const statusCode = error.status || 500;
-    res.status(statusCode).json({ error: error.message || "Unexpected server error" });
+    res.status(statusCode).json({
+      error: error.message || "Unexpected server error",
+    });
   }
 };
