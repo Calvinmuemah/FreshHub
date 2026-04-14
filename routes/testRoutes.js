@@ -1,4 +1,3 @@
-// routes/testRoutes.js - DEBUG ONLY
 import express from "express";
 import pool from "../config/db.js";
 import { verifyToken } from "../middlewares/authMiddleware.js";

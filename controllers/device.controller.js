@@ -1,4 +1,3 @@
-// controllers/device.controller.js
 import * as DeviceService from "../services/device.service.js";
 
 // CREATE DEVICE (no auth)
@@ -6,7 +5,7 @@ export const createDevice = async (req, res) => {
   try {
     const { userId, name, location } = req.body;
 
-    // ✅ validate
+    // validate
     if (!userId) {
       return res.status(400).json({ error: "userId is required" });
     }

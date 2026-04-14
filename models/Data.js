@@ -1,4 +1,3 @@
-// models/data.model.js
 import pool from "../config/db.js";
 
 export const insertData = async (data) => {

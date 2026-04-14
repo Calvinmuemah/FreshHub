@@ -30,10 +30,10 @@ export const connectDB = async () => {
     console.log("🔗 DB:", process.env.POSTGRES_URI);
 
     const client = await pool.connect();
-    console.log("✅ Connected to Neon DB");
+    console.log("Connected to Neon DB");
     client.release();
   } catch (error) {
-    console.error("❌ DB error:", error.message);
+    console.error("DB error:", error.message);
     throw error;
   }
 };

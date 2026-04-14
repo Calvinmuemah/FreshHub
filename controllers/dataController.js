@@ -1,4 +1,3 @@
-// controllers/data.controller.js
 import * as DataService from "../services/data.js";
 
 export const sendData = async (req, res) => {

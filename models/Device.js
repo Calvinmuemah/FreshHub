@@ -1,4 +1,3 @@
-// models/device.model.js
 import pool from "../config/db.js";
 
 export const createDevice = async (userId, name, location, deviceId) => {

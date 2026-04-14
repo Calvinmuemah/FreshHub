@@ -1,4 +1,3 @@
-// routes/data.routes.js
 import express from "express";
 import {
   sendData,

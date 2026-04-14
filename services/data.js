@@ -10,7 +10,7 @@ export const createData = async (payload) => {
   try {
     const { deviceId, temperature, humidity, voltage, current } = payload;
 
-    // ✅ 1. Validate required fields
+    // 1. Validate required fields
     if (!deviceId) {
       throw new Error("deviceId is required");
     }
@@ -24,13 +24,13 @@ export const createData = async (payload) => {
       throw new Error("Missing sensor values");
     }
 
-    // ✅ 2. Validate device exists
+    // 2. Validate device exists
     const device = await DeviceModel.getDeviceByDeviceId(deviceId);
     if (!device) {
       throw new Error("Invalid deviceId");
     }
 
-    // ✅ 3. Validate sensor values
+    // 3. Validate sensor values
     if (
       temperature < -50 || temperature > 100 ||
       humidity < 0 || humidity > 100 ||
@@ -40,7 +40,7 @@ export const createData = async (payload) => {
       throw new Error("Invalid sensor values");
     }
 
-    // ✅ 4. Get user (for alerts)
+    // 4. Get user (for alerts)
     const userRes = await pool.query(
       "SELECT id, email, phone_number FROM system_users WHERE id = $1",
       [device.user_id]
@@ -48,7 +48,7 @@ export const createData = async (payload) => {
 
     const user = userRes.rows[0];
 
-    // 🤖 5. AI Insights (SAFE)
+    // 5. AI Insights (SAFE)
     let aiResult = {
       insight: "No insight",
       recommendation: "No recommendation",
@@ -65,7 +65,7 @@ export const createData = async (payload) => {
       console.error("AI error:", err.message);
     }
 
-    // 🧠 6. Spoilage Prediction (SAFE)
+    // 6. Spoilage Prediction (SAFE)
     let spoilage = {
       risk: "UNKNOWN",
     };
@@ -79,7 +79,7 @@ export const createData = async (payload) => {
       console.error("Prediction error:", err.message);
     }
 
-    // 🚨 7. Alerts (WITH SPOILAGE)
+    // 7. Alerts (WITH SPOILAGE)
     try {
       await checkAlerts(
         {
@@ -95,7 +95,7 @@ export const createData = async (payload) => {
       console.error("Alert error:", err.message);
     }
 
-    // 💾 8. Save data WITH AI + prediction
+    // 8. Save data WITH AI + prediction
     const saved = await DataModel.insertData({
       deviceId,
       temperature,
@@ -131,7 +131,7 @@ export const getAvgTemperaturePerHour = async (deviceId) => {
 
   const data = await DataModel.getAvgTempPerHour(deviceId);
 
-  // ✅ Format for frontend charts
+  // Format for frontend charts
   return data.map((row) => ({
     time: row.hour,
     temperature: parseFloat(row.avg_temp),
