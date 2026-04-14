@@ -18,7 +18,10 @@ export const getLatestData = async (req, res) => {
     const { deviceId } = req.params;
     const data = await DataService.fetchLatest(deviceId);
 
-    res.json(data);
+    res.status(200).json({
+      success: true,
+      data,
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -29,7 +32,10 @@ export const getHistory = async (req, res) => {
     const { deviceId } = req.params;
     const data = await DataService.fetchHistory(deviceId);
 
-    res.json(data);
+    res.status(200).json({
+      success: true,
+      data,
+    });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
